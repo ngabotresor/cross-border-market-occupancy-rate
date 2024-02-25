@@ -1,6 +1,6 @@
 from rest_framework import permissions
 
-class IsAdminMemoUser(permissions.BasePermission):
+class IsAdminUser(permissions.BasePermission):
     """
     Custom permission to only allow admin users to access a view.
     """
