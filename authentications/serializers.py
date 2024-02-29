@@ -7,7 +7,7 @@ from marketrecord.models import Location
 class UserSerializer(serializers.ModelSerializer):
     phone_number = serializers.CharField(min_length=13, max_length=13)
     role = serializers.StringRelatedField() 
-    location = serializers.StringRelatedField()
+    location = serializers.SlugRelatedField(queryset=Location.objects.all(), slug_field='name')
 
     class Meta:
         model = User
@@ -35,7 +35,7 @@ class UserSerializer(serializers.ModelSerializer):
         if location_name:
             location = Location.objects.filter(name=location_name).first()
             if location:
-                data['location'] = location.id
+                data['location'] = location
             else:
                 raise serializers.ValidationError({"location": "Location with this name does not exist."})
         return super().to_internal_value(data)
