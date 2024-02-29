@@ -53,7 +53,7 @@ class User(AbstractBaseUser):
     phone_number = models.CharField(max_length=13, null=True, blank=True)
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True,blank=True, default=1)
     position = models.CharField(max_length=255)
-    location = models.ForeignKey('marketrecord.Location', on_delete=models.CASCADE, default=1)
+    location = models.ForeignKey('marketrecord.Location', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
