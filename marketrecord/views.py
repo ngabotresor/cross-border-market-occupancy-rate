@@ -23,6 +23,18 @@ class LocationCreate(APIView):
         }, status=status.HTTP_400_BAD_REQUEST)
     
 
+# View to all recoreded locations
+class LocationList(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, format=None):
+        locations = Location.objects.all()
+        serializer = LocationSerializer(locations, many=True)
+        return Response({
+            "message": "Locations retrieved successfully",
+            "locations": serializer.data
+        }, status=status.HTTP_200_OK)
+    
+
 
 # Records markets for a specific location 
 class MarketCreate(APIView):
