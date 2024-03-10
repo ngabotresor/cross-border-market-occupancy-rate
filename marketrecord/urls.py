@@ -10,4 +10,8 @@ urlpatterns = [
     path('market-create/', MarketCreate.as_view(), name='market-create'),
     path('market-list/', MarketList.as_view(), name='market-list'),
     path('report-create/', ReportCreate.as_view(), name='report-create'),
+    path('track-report/<int:pk>/', TrackReportView.as_view(), name='track-report'),
+    path('report-approve/<int:pk>/', ReportApproveView.as_view(), name='report-approve'),
+    path('report-comments/<int:pk>/', ViewReportCommentsView.as_view(), name='report-comments'),
+    
 ]

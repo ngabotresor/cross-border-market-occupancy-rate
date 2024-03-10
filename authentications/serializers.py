@@ -11,7 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'firstname', 'lastname', 'phone_number', 'role', 'password', 'position', 'location']
+        fields = ['email', 'firstname', 'lastname', 'phone_number', 'role', 'password', 'position', 'location', 'is_approved', 'created_at', 'updated_at']
         extra_kwargs = {'password': {'write_only': True}}
 
     def validate_password(self, value):
@@ -63,3 +63,13 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError('Password is required')
 
         return data
+    
+
+class UserApproveSerializer(serializers.Serializer):
+    is_approved = serializers.BooleanField()
+    
+    def validate_is_approved(self, value):
+        if value == False:
+            raise serializers.ValidationError("You cannot disapprove a user.")
+        return value
+

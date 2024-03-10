@@ -7,7 +7,8 @@ from .serializers import *
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status, permissions
-
+from rest_framework.permissions import IsAuthenticated
+from .permissions import *
 #user create view
 class UserCreate(APIView):
     permission_classes = [permissions.AllowAny]
@@ -41,11 +42,49 @@ class LoginView(APIView):
         if user is None:
             return Response({'error': 'Invalid email or password'}, status=status.HTTP_400_BAD_REQUEST)
 
-        refresh = RefreshToken.for_user(user)
-        res = {
-            'message': 'User logged in successfully',
-            'user': UserSerializer(user).data,
-            'access': str(refresh.access_token),
-            'refresh': str(refresh),
-        }
-        return Response(res, status=status.HTTP_200_OK)
+        if user.is_approved == True:
+             refresh = RefreshToken.for_user(user)
+             res = {
+                    'message': 'User logged in successfully',
+                    'user': UserSerializer(user).data,
+                    'access': str(refresh.access_token),
+                    'refresh': str(refresh),
+                }
+             return Response(res, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'User not approved'}, status=status.HTTP_400_BAD_REQUEST)
+
+    
+
+#user list view
+
+class UserList(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    def get(self, request, format=None):
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response({
+            "message": "Users retrieved successfully",
+            "users": serializer.data
+        }, status=status.HTTP_200_OK)
+    
+
+# View to approve a user
+
+class UserApprove(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    def post(self, request, pk, format=None):
+        serializer = UserApproveSerializer(data=request.data)
+        if serializer.is_valid():
+            user = User.objects.get(id=pk)
+            user.is_approved = True
+            user.save()
+            return Response({
+                "message": "User approved successfully",
+                "user": UserSerializer(user).data
+            }, status=status.HTTP_200_OK)
+        return Response({
+            "message": "Failed to approve user",
+            "errors": serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+    

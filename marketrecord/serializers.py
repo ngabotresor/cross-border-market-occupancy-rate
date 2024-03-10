@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import *
+from authentications.models import *
 
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -24,13 +25,25 @@ class ReportRecordSerializer(serializers.ModelSerializer):
         model = ReportRecord
         fields = ['component_name', 'component_description', 'total_number_places_available', 'number_places_rented','occupancy_rate', 'observation']
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['firstname', 'lastname','position','email','phone_number']
+
+
+
 class ReportSerializer(serializers.ModelSerializer):
     market = serializers.SlugRelatedField(
         slug_field='name',
         queryset=Market.objects.all()
     )
     records = ReportRecordSerializer(many=True)
-    created_by = serializers.SerializerMethodField()
+    created_by = UserSerializer(read_only=True)
+    verified_by = UserSerializer(read_only=True)
+    approved_by = UserSerializer(read_only=True)
+    forwarded_by = UserSerializer(read_only=True)
+    viewed_by = UserSerializer(many=True, read_only=True)
+    forwarded_to = UserSerializer(read_only=True)
 
     class Meta:
         model = Report
@@ -55,3 +68,19 @@ class ReportSerializer(serializers.ModelSerializer):
     
     def get_created_by(self, obj):
         return f"{obj.created_by.firstname} {obj.created_by.lastname}"
+    
+
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ['commented_by', 'report', 'comment', 'created_at']
+
+
+class CommentListSerializer(serializers.ModelSerializer):
+    commented_by = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ['commented_by', 'comment', 'created_at']

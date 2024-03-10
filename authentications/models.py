@@ -54,6 +54,7 @@ class User(AbstractBaseUser):
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True,blank=True, default=1)
     position = models.CharField(max_length=255)
     location = models.ForeignKey('marketrecord.Location', on_delete=models.CASCADE)
+    is_approved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

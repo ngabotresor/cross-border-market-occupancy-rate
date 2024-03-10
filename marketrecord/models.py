@@ -1,4 +1,5 @@
 from django.db import models
+from authentications.models import User
 
 class Location(models.Model):
     name = models.CharField(max_length=255)
@@ -47,8 +48,6 @@ class Report(models.Model):
         return f"{self.market} - {self.season} - {self.year}"
 
 class ReportRecord(models.Model):
-    
-
     report = models.ForeignKey(Report, on_delete=models.CASCADE, related_name='records')
     component_name = models.CharField(max_length=255)
     component_description = models.TextField()
@@ -71,3 +70,13 @@ class ReportRecord(models.Model):
         else:
             self.occupancy_rate = 0
         super().save(*args, **kwargs)
+
+
+class Comment(models.Model):
+    commented_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
+    report = models.ForeignKey(Report, on_delete=models.CASCADE, related_name='comments')
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'comment'
