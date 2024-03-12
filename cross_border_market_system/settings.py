@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'marketrecord',
     'rest_framework',
     'rest_framework_simplejwt',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
