@@ -28,8 +28,8 @@ class Report(models.Model):
         ('rollbacked', 'Rollbacked'),
     ]
     market = models.ForeignKey(Market, on_delete=models.CASCADE, related_name='reports')
-    season = models.CharField(max_length=255)
-    year = models.IntegerField()
+    season = models.CharField(max_length=255, blank=True)
+    year = models.IntegerField(null=True, blank=True)
     created_by = models.ForeignKey('authentications.User', on_delete=models.CASCADE, related_name='reports_created')
     verified_by = models.ForeignKey('authentications.User', on_delete=models.CASCADE, related_name='reports_verified', null=True, blank=True)
     approved_by = models.ForeignKey('authentications.User', on_delete=models.CASCADE, related_name='reports_approved', null=True, blank=True)
@@ -42,10 +42,7 @@ class Report(models.Model):
 
     class Meta:
         db_table = 'report'
-        unique_together = ['market', 'season', 'year']
-
-    def __str__(self):
-        return f"{self.market} - {self.season} - {self.year}"
+        # unique_together = ['market', 'season', 'year']
 
 class ReportRecord(models.Model):
     report = models.ForeignKey(Report, on_delete=models.CASCADE, related_name='records')
