@@ -66,7 +66,6 @@ class MarketList(APIView):
         }, status=status.HTTP_200_OK)
     
 # view to list markets in a user location
-
 class UserLocationMarketList(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request, format=None):
@@ -118,6 +117,20 @@ class AllReportList(APIView):
             "reports": serializer.data
         }, status=status.HTTP_200_OK)
     
+
+# view to list your own reports(reported that you created)
+
+class UserReportList(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, format=None):
+        user = request.user
+        reports = Report.objects.filter(created_by=user)
+        serializer = ReportSerializer(reports, many=True)
+        return Response({
+            "message": "Reports retrieved successfully",
+            "reports": serializer.data
+        }, status=status.HTTP_200_OK)
+     
  
 class TrackReportView(APIView):
     permission_classes = [IsAuthenticated]
