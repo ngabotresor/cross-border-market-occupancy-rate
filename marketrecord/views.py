@@ -94,12 +94,13 @@ class ReportCreate(APIView):
             "errors": serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
     
-# all reports in the system based on user location
-class LocationReportList(APIView):
+
+#view to allow a user to only see the report that has the market with the same location as the user
+class UserLocationReportList(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request, format=None):
         user = request.user
-        reports = Report.objects.filter(location=user.location)
+        reports = Report.objects.filter(market__location=user.location)
         serializer = ReportSerializer(reports, many=True)
         return Response({
             "message": "Reports retrieved successfully",
@@ -121,7 +122,7 @@ class AllReportList(APIView):
 # view to list your own reports(reported that you created)
 
 class UserReportList(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsCreatorUser]
     def get(self, request, format=None):
         user = request.user
         reports = Report.objects.filter(created_by=user)
