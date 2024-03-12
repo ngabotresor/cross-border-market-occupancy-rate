@@ -65,6 +65,20 @@ class MarketList(APIView):
             "markets": serializer.data
         }, status=status.HTTP_200_OK)
     
+# view to list markets in a user location
+
+class UserLocationMarketList(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, format=None):
+        user = request.user
+        markets = Market.objects.filter(location=user.location)
+        serializer = MarketSerializer(markets, many=True)
+        return Response({
+            "message": "Markets retrieved successfully",
+            "markets": serializer.data
+        }, status=status.HTTP_200_OK)
+
+    
 #Crate a report
 class ReportCreate(APIView):
     permission_classes = [IsAuthenticated, IsCreatorUser]
@@ -80,6 +94,29 @@ class ReportCreate(APIView):
             "message": "Failed to create report",
             "errors": serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
+    
+# all reports in the system based on user location
+class LocationReportList(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, format=None):
+        user = request.user
+        reports = Report.objects.filter(location=user.location)
+        serializer = ReportSerializer(reports, many=True)
+        return Response({
+            "message": "Reports retrieved successfully",
+            "reports": serializer.data
+        }, status=status.HTTP_200_OK)
+    
+# a view to allow an admin to view all reports in the system
+class AllReportList(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    def get(self, request, format=None):
+        reports = Report.objects.all()
+        serializer = ReportSerializer(reports, many=True)
+        return Response({
+            "message": "Reports retrieved successfully",
+            "reports": serializer.data
+        }, status=status.HTTP_200_OK)
     
  
 class TrackReportView(APIView):
