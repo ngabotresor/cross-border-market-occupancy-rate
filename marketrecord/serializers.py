@@ -23,7 +23,7 @@ class MarketSerializer(serializers.ModelSerializer):
 class ReportRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReportRecord
-        fields = ['component_name', 'component_description', 'total_number_places_available', 'number_places_rented','occupancy_rate', 'observation']
+        fields = ['component_name','total_number_places_available', 'number_places_rented','occupancy_rate', 'observation']
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

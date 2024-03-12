@@ -50,7 +50,7 @@ class Report(models.Model):
 class ReportRecord(models.Model):
     report = models.ForeignKey(Report, on_delete=models.CASCADE, related_name='records')
     component_name = models.CharField(max_length=255)
-    component_description = models.TextField()
+    component_description = models.TextField(null=True, blank=True,default='')
     total_number_places_available = models.IntegerField()
     number_places_rented = models.IntegerField()
     occupancy_rate = models.FloatField(default=0)
