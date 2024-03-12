@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import *
 from authentications.models import *
-
+from datetime import datetime
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
@@ -53,6 +53,20 @@ class ReportSerializer(serializers.ModelSerializer):
             'created_by': {'read_only': True}
         }
 
+    # def create(self, validated_data):
+    #     records_data = validated_data.pop('records')
+    #     market = validated_data.get('market')
+    #     user = self.context['request'].user
+
+    #     if market.location != user.location:
+    #         raise serializers.ValidationError("You can only create a report for a market in your location.")
+
+    #     report = Report.objects.create(**validated_data)
+    #     for record_data in records_data:
+    #         ReportRecord.objects.create(report=report, **record_data)
+    #     return report
+        
+    
     def create(self, validated_data):
         records_data = validated_data.pop('records')
         market = validated_data.get('market')
@@ -61,10 +75,18 @@ class ReportSerializer(serializers.ModelSerializer):
         if market.location != user.location:
             raise serializers.ValidationError("You can only create a report for a market in your location.")
 
-        report = Report.objects.create(**validated_data)
+        # Determine the year and season based on the current date
+        current_date = datetime.now()
+        year = current_date.year
+        month = current_date.month
+        season = 'Winter' if month in [12, 1, 2] else 'Spring' if month in [3, 4, 5] else 'Summer' if month in [6, 7, 8] else 'Autumn'
+
+        report = Report.objects.create(year=year, season=season, **validated_data)
         for record_data in records_data:
             ReportRecord.objects.create(report=report, **record_data)
         return report
+    
+    
     
     def get_created_by(self, obj):
         return f"{obj.created_by.firstname} {obj.created_by.lastname}"
