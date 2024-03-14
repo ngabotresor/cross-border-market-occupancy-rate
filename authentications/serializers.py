@@ -65,11 +65,7 @@ class LoginSerializer(serializers.Serializer):
         return data
     
 
-class UserApproveSerializer(serializers.Serializer):
+class UserUpdateSerializer(serializers.Serializer):
     is_approved = serializers.BooleanField()
-    
-    def validate_is_approved(self, value):
-        if value == False:
-            raise serializers.ValidationError("You cannot disapprove a user.")
-        return value
+    role = serializers.CharField(max_length=10)
 

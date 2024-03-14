@@ -2,7 +2,7 @@
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import User
+from .models import *
 from .serializers import *
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -71,20 +71,24 @@ class UserList(APIView):
 
 # View to approve a user
 
-class UserApprove(APIView):
+class UpdateUser(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
+
     def post(self, request, pk, format=None):
-        serializer = UserApproveSerializer(data=request.data)
+        serializer = UserUpdateSerializer(data=request.data)
         if serializer.is_valid():
             user = User.objects.get(id=pk)
-            user.is_approved = True
+            user.is_approved = serializer.validated_data['is_approved']
+            role_name = serializer.validated_data['role']
+            role = Role.objects.get(name=role_name)
+            user.role = role
             user.save()
             return Response({
-                "message": "User approved successfully",
+                "message": "User updated successfully",
                 "user": UserSerializer(user).data
             }, status=status.HTTP_200_OK)
         return Response({
-            "message": "Failed to approve user",
+            "message": "Failed to update user",
             "errors": serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
     

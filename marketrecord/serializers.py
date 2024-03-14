@@ -47,10 +47,11 @@ class ReportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Report
-        fields = ['market', 'season', 'year', 'created_by', 'verified_by', 'approved_by', 'forwarded_by', 'viewed_by', 'forwarded_to', 'status', 'records']
+        fields = ['id','market', 'season', 'year', 'created_by', 'verified_by', 'approved_by', 'forwarded_by', 'viewed_by', 'forwarded_to', 'status', 'records']
         extra_kwargs = {
             'status': {'default': 'pending'},
-            'created_by': {'read_only': True}
+            'created_by': {'read_only': True},
+            'id':{'read_only':True}
         }
 
     # def create(self, validated_data):
