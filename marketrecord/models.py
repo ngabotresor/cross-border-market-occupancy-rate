@@ -63,7 +63,7 @@ class ReportRecord(models.Model):
         db_table = 'report_record'
 
     def __str__(self):
-        return f"{self.report} - {self.component} - {self.status}"
+        return f"{self.report} - {self.component_name}"
     
     def save(self, *args, **kwargs):
         if self.total_number_places_available > 0:
