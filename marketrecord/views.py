@@ -6,6 +6,7 @@ from .serializers import *
 from authentications.permissions import *
 from rest_framework.permissions import IsAuthenticated
 from authentications.models import *
+from django.shortcuts import get_object_or_404
 
 class LocationCreate(APIView):
     permission_classes = [permissions.AllowAny] 
@@ -22,6 +23,34 @@ class LocationCreate(APIView):
             'message': 'Location creation failed',
             'errors': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
+        
+    
+class LocationCreate(APIView):
+    permission_classes = [permissions.AllowAny] 
+
+    def post(self, request, format=None):
+        serializer = LocationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'message': 'Location created successfully',
+                'location': serializer.data
+            }, status=status.HTTP_201_CREATED)
+        return Response({
+            'message': 'Location creation failed',
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class LocationDelete(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def delete(self, request, pk, format=None):
+        location = get_object_or_404(Location, pk=pk)
+        location.delete()
+        return Response({
+            "message": "Location deleted successfully"
+        }, status=status.HTTP_204_NO_CONTENT)
     
 
 # View to all recoreded locations
@@ -52,6 +81,35 @@ class MarketCreate(APIView):
             "message": "Failed to create market",
             "errors": serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+class MarketUpdate(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def put(self, request, pk, format=None):
+        market = Market.objects.get(pk=pk)
+        serializer = MarketSerializer(market, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                "message": "Market updated successfully",
+                "market": serializer.data
+            }, status=status.HTTP_200_OK)
+        return Response({
+            "message": "Failed to update market",
+            "errors": serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+class MarketDelete(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def delete(self, request, pk, format=None):
+        market = Market.objects.get(pk=pk)
+        market.delete()
+        return Response({
+            "message": "Market deleted successfully"
+        }, status=status.HTTP_204_NO_CONTENT)
     
 
 # View to all recoreded markets
@@ -209,9 +267,11 @@ class ReportApproveView(APIView):
             if report.status in ['pending', 'rollback', 'approved'] and request.user.role.name == Role.verifier:
                 report.status = 'processing'
                 report.verified_by = request.user
+                report.verified_at = datetime.now()
             elif report.status in ['processing', 'rollback', 'approved'] and request.user.role.name == Role.approver:
                 report.status = 'processing'
                 report.approved_by = request.user
+                report.approved_at = datetime.now()
             elif report.status in ['processing', 'rollback', 'approved'] and request.user.role.name == Role.header:
                 if viewers is None:
                     return Response({'error': 'Viewers are required for header approval'}, status=status.HTTP_400_BAD_REQUEST)
@@ -221,6 +281,7 @@ class ReportApproveView(APIView):
                 minister_user = User.objects.get(role__name='minister')  # Fetch the minister
                 report.viewed_by.set(viewers_users)
                 report.forwarded_to = minister_user
+                report.forwarded_at = datetime.now()
             else:
                 return Response({'error': f'Invalid action for your role {request.user.role.name} or report status {report.status}'}, status=status.HTTP_400_BAD_REQUEST)
         elif action == 'rollback':

@@ -47,7 +47,7 @@ class ReportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Report
-        fields = ['id','market', 'season', 'year', 'created_by', 'verified_by', 'approved_by', 'forwarded_by', 'viewed_by', 'forwarded_to', 'status', 'records']
+        fields = ['id','market', 'season', 'year', 'created_by','created_at', 'verified_by','verified_at', 'approved_by','approved_at', 'forwarded_by', 'viewed_by', 'forwarded_to','forwarded_at', 'status', 'records']
         extra_kwargs = {
             'status': {'default': 'pending'},
             'created_by': {'read_only': True},
