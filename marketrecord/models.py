@@ -39,7 +39,7 @@ class Report(models.Model):
     viewed_by = models.ManyToManyField('authentications.User', related_name='reports_viewed', blank=True)
     forwarded_to = models.ForeignKey('authentications.User', on_delete=models.CASCADE, related_name='reports_forwarded_to', null=True, blank=True)
     forwarded_at = models.DateTimeField(null=True, blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     forwarded_at = models.DateTimeField(null=True, blank=True)
