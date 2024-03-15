@@ -92,6 +92,26 @@ class ReportSerializer(serializers.ModelSerializer):
     def get_created_by(self, obj):
         return f"{obj.created_by.firstname} {obj.created_by.lastname}"
     
+    
+    def update(self, instance, validated_data):
+        records_data = validated_data.pop('records')
+        instance = super().update(instance, validated_data)
+
+        # Handle the records
+        for record_data in records_data:
+            record_id = record_data.get('id', None)
+            if record_id:
+                # Update the record if it already exists
+                record = ReportRecord.objects.get(id=record_id, report=instance)
+                for attr, value in record_data.items():
+                    setattr(record, attr, value)
+                record.save()
+            else:
+                # Create a new record
+                ReportRecord.objects.create(report=instance, **record_data)
+
+        return instance
+    
 
 
 
