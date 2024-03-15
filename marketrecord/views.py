@@ -365,6 +365,8 @@ class ReportApproveView(APIView):
                 report.forwarded_at = datetime.now()
             else:
                 return Response({'error': f'Invalid action for your role {request.user.role.name} or report status {report.status}'}, status=status.HTTP_400_BAD_REQUEST)
+            report.save()
+            return Response({'message': f'User with role {request.user.role.name} has {action}d report with id {report.id}.'})
         elif action == 'rollback':
             if comment_text is None:
                 return Response({'error': 'Comment is required for rollback action'}, status=status.HTTP_400_BAD_REQUEST)
@@ -385,8 +387,7 @@ class ReportApproveView(APIView):
             report.save()
             return Response({'message': f'User with role {request.user.role.name} has {action}d report with id {report.id}.'})
         
-        else:
-            return Response({'error': 'Invalid action'}, status=status.HTTP_400_BAD_REQUEST)
+        
             
 
 class ViewReportCommentsView(APIView):
