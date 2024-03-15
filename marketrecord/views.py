@@ -384,6 +384,9 @@ class ReportApproveView(APIView):
 
             report.save()
             return Response({'message': f'User with role {request.user.role.name} has {action}d report with id {report.id}.'})
+        
+        else:
+            return Response({'error': 'Invalid action'}, status=status.HTTP_400_BAD_REQUEST)
             
 
 class ViewReportCommentsView(APIView):

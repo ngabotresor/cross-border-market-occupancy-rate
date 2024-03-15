@@ -69,6 +69,19 @@ class UserList(APIView):
         }, status=status.HTTP_200_OK)
     
 
+#View to list users with viewer role 
+
+class ViewerList(APIView):
+    permission_classes = [IsAuthenticated, IsHeaderUser]
+    def get(self, request, format=None):
+        users = User.objects.filter(role__name='viewer')
+        serializer = UserSerializer(users, many=True)
+        return Response({
+            "message": "Viewers retrieved successfully",
+            "users": serializer.data
+        }, status=status.HTTP_200_OK)
+
+
 # View to approve a user
 
 class UpdateUser(APIView):
