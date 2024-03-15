@@ -153,6 +153,27 @@ class ReportCreate(APIView):
         }, status=status.HTTP_400_BAD_REQUEST)
     
 
+# View to allow a creator to update a report
+class ReportUpdate(APIView):
+    permission_classes = [IsAuthenticated, IsCreatorUser]
+
+    def put(self, request, pk, format=None):
+        report = Report.objects.get(id=pk)
+        serializer = ReportSerializer(report, data=request.data, context={'request': request}, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            report.status = 'rollback_to_be_signed'
+            report.save()
+            return Response({
+                "message": "Report updated successfully",
+                "report": serializer.data
+            }, status=status.HTTP_200_OK)
+        return Response({
+            "message": "Failed to update report",
+            "errors": serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+
 #view to allow a user to only see the report that has the market with the same location as the user
 class UserLocationReportList(APIView):
     permission_classes = [IsAuthenticated]
@@ -249,6 +270,66 @@ class TrackReportView(APIView):
     
 
 
+# class ReportApproveView(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def post(self, request, pk, format=None):
+#         report = Report.objects.get(id=pk)
+#         action = request.data.get('action')
+#         viewers = request.data.get('viewers', None)
+#         comment_text = request.data.get('comment', None)
+
+#         if action not in ['approve', 'rollback']:
+#             return Response({'error': 'Invalid action'}, status=status.HTTP_400_BAD_REQUEST)
+
+#         if action == 'approve':
+#             if comment_text:  # If comment is provided
+#                 Comment.objects.create(commented_by=request.user, report=report, comment=comment_text)
+#             if report.status in ['pending', 'rollback'] and request.user.role.name == Role.verifier:
+#                 report.status = 'processing'
+#                 report.verified_by = request.user
+#                 report.verified_at = datetime.now()
+#             elif report.status in ['processing', 'rollback', 'approved'] and request.user.role.name == Role.approver:
+#                 report.status = 'processing'
+#                 report.approved_by = request.user
+#                 report.approved_at = datetime.now()
+#             elif report.status in ['processing', 'rollback', 'approved'] and request.user.role.name == Role.header:
+#                 if viewers is None:
+#                     return Response({'error': 'Viewers are required for header approval'}, status=status.HTTP_400_BAD_REQUEST)
+#                 report.status = 'approved'
+#                 report.forwarded_by = request.user
+#                 viewers_users = User.objects.filter(id__in=viewers)
+#                 minister_user = User.objects.get(role__name='minister')  # Fetch the minister
+#                 report.viewed_by.set(viewers_users)
+#                 report.forwarded_to = minister_user
+#                 report.forwarded_at = datetime.now()
+#             else:
+#                 return Response({'error': f'Invalid action for your role {request.user.role.name} or report status {report.status}'}, status=status.HTTP_400_BAD_REQUEST)
+#         elif action == 'rollback':
+#             if comment_text is None:
+#                 return Response({'error': 'Comment is required for rollback action'}, status=status.HTTP_400_BAD_REQUEST)
+#             Comment.objects.create(commented_by=request.user, report=report, comment=comment_text)
+#             if report.status in ['processing', 'rollback', 'approved'] and request.user.role.name == Role.header:
+#                 report.status = 'rollback'
+#                 report.forwarded_by = None
+#                 report.approved_by = None
+#                 report.viewed_by.clear()
+#                 report.forwarded_to = None
+#             elif report.status in ['processing', 'rollback', 'approved'] and request.user.role.name == Role.approver:
+#                 report.status = 'rollback'
+#                 report.approved_by = None
+#                 report.verified_by = None
+#             elif report.status in ['processing', 'approved', 'rollback'] and request.user.role.name == Role.verifier:
+#                 report.status = 'rollback'
+#                 report.verified_by = None
+#             else:
+#                 return Response({'error': f'Invalid action for your role {request.user.role.name} or report status {report.status}'}, status=status.HTTP_400_BAD_REQUEST)
+
+#         report.save()
+#         return Response({'message': f'User with role {request.user.role.name} has {action}d report with id {report.id}.'})
+    
+
+
 class ReportApproveView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -264,18 +345,18 @@ class ReportApproveView(APIView):
         if action == 'approve':
             if comment_text:  # If comment is provided
                 Comment.objects.create(commented_by=request.user, report=report, comment=comment_text)
-            if report.status in ['pending', 'rollback', 'approved'] and request.user.role.name == Role.verifier:
-                report.status = 'processing'
+            if report.status in ['pending', 'rollback_to_be_signed'] and request.user.role.name == Role.verifier:
+                report.status = 'verified'
                 report.verified_by = request.user
                 report.verified_at = datetime.now()
-            elif report.status in ['processing', 'rollback', 'approved'] and request.user.role.name == Role.approver:
-                report.status = 'processing'
+            elif report.status in ['verified'] and request.user.role.name == Role.approver:
+                report.status = 'approved'
                 report.approved_by = request.user
                 report.approved_at = datetime.now()
-            elif report.status in ['processing', 'rollback', 'approved'] and request.user.role.name == Role.header:
+            elif report.status in ['approved'] and request.user.role.name == Role.header:
                 if viewers is None:
                     return Response({'error': 'Viewers are required for header approval'}, status=status.HTTP_400_BAD_REQUEST)
-                report.status = 'approved'
+                report.status = 'forwarded'
                 report.forwarded_by = request.user
                 viewers_users = User.objects.filter(id__in=viewers)
                 minister_user = User.objects.get(role__name='minister')  # Fetch the minister
@@ -288,25 +369,22 @@ class ReportApproveView(APIView):
             if comment_text is None:
                 return Response({'error': 'Comment is required for rollback action'}, status=status.HTTP_400_BAD_REQUEST)
             Comment.objects.create(commented_by=request.user, report=report, comment=comment_text)
-            if report.status in ['processing', 'rollback', 'approved'] and request.user.role.name == Role.header:
+            if report.status in ['pending','verified', 'approved']:
                 report.status = 'rollback'
-                report.forwarded_by = None
+                report.verified_by = None
+                report.verified_at = None
                 report.approved_by = None
+                report.approved_at = None
+                report.forwarded_by = None
+                report.forwarded_at = None
                 report.viewed_by.clear()
                 report.forwarded_to = None
-            elif report.status in ['processing', 'rollback', 'approved'] and request.user.role.name == Role.approver:
-                report.status = 'rollback'
-                report.approved_by = None
-                report.verified_by = None
-            elif report.status in ['processing', 'approved', 'rollback'] and request.user.role.name == Role.verifier:
-                report.status = 'rollback'
-                report.verified_by = None
             else:
                 return Response({'error': f'Invalid action for your role {request.user.role.name} or report status {report.status}'}, status=status.HTTP_400_BAD_REQUEST)
 
-        report.save()
-        return Response({'message': f'User with role {request.user.role.name} has {action}d report with id {report.id}.'})
-    
+            report.save()
+            return Response({'message': f'User with role {request.user.role.name} has {action}d report with id {report.id}.'})
+            
 
 class ViewReportCommentsView(APIView):
     permission_classes = [IsAuthenticated]
