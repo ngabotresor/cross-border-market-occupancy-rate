@@ -414,8 +414,7 @@ class ViewerReportList(APIView):
             "reports": serializer.data
         }, status=status.HTTP_200_OK)
         
-        
-            
+    
 
 class ViewReportCommentsView(APIView):
     permission_classes = [IsAuthenticated]

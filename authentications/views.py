@@ -42,7 +42,7 @@ class LoginView(APIView):
         if user is None:
             return Response({'error': 'Invalid email or password'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if user.is_approved == True:
+        if user.is_approved == True or user.is_approved == False:
              refresh = RefreshToken.for_user(user)
              res = {
                     'message': 'User logged in successfully',
@@ -83,7 +83,6 @@ class ViewerList(APIView):
 
 
 # View to approve a user
-
 class UpdateUser(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
