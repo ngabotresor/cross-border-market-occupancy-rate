@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import *
 from authentications.models import *
 from datetime import datetime
+
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
@@ -16,7 +17,7 @@ class MarketSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Market
-        fields = ['name','location']
+        fields = ['id','name','location']
 
 
 

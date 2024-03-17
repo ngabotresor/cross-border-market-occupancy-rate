@@ -11,7 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'firstname', 'lastname', 'phone_number', 'role', 'password', 'position', 'location', 'is_approved', 'created_at', 'updated_at']
+        fields = ['id','email', 'firstname', 'lastname', 'phone_number', 'role', 'password', 'position', 'location', 'is_approved', 'created_at', 'updated_at']
         extra_kwargs = {'password': {'write_only': True}}
 
     def validate_password(self, value):
@@ -66,6 +66,6 @@ class LoginSerializer(serializers.Serializer):
     
 
 class UserUpdateSerializer(serializers.Serializer):
-    is_approved = serializers.BooleanField()
-    role = serializers.CharField(max_length=10)
+    is_approved = serializers.BooleanField(required=False)
+    role = serializers.CharField(max_length=10, required=False)
 

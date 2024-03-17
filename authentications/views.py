@@ -91,10 +91,12 @@ class UpdateUser(APIView):
         serializer = UserUpdateSerializer(data=request.data)
         if serializer.is_valid():
             user = User.objects.get(id=pk)
-            user.is_approved = serializer.validated_data['is_approved']
-            role_name = serializer.validated_data['role']
-            role = Role.objects.get(name=role_name)
-            user.role = role
+            if 'is_approved' in serializer.validated_data:
+                user.is_approved = serializer.validated_data['is_approved']
+            if 'role' in serializer.validated_data:
+                role_name = serializer.validated_data['role']
+                role = Role.objects.get(name=role_name)
+                user.role = role
             user.save()
             return Response({
                 "message": "User updated successfully",
@@ -104,4 +106,4 @@ class UpdateUser(APIView):
             "message": "Failed to update user",
             "errors": serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
-    
+        
