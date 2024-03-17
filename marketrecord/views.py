@@ -387,6 +387,33 @@ class ReportApproveView(APIView):
             report.save()
             return Response({'message': f'User with role {request.user.role.name} has {action}d report with id {report.id}.'})
         
+
+
+
+# a view to allow minister to view all reports that have been forwarded to him
+
+class MinisterReportList(APIView):
+    permission_classes = [IsAuthenticated, IsMinisterUser]
+    def get(self, request, format=None):
+        reports = Report.objects.filter(forwarded_to=request.user)
+        serializer = ReportSerializer(reports, many=True)
+        return Response({
+            "message": "Reports retrieved successfully",
+            "reports": serializer.data
+        }, status=status.HTTP_200_OK)
+    
+
+# a view to allow viewer to view all reports that have been forwarded to him
+class ViewerReportList(APIView):
+    permission_classes = [IsAuthenticated, IsViewerUser]
+    def get(self, request, format=None):
+        reports = Report.objects.filter(viewed_by=request.user)
+        serializer = ReportSerializer(reports, many=True)
+        return Response({
+            "message": "Reports retrieved successfully",
+            "reports": serializer.data
+        }, status=status.HTTP_200_OK)
+        
         
             
 

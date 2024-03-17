@@ -63,7 +63,8 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError('Password is required')
 
         return data
-    
+
+  
 
 class UserUpdateSerializer(serializers.Serializer):
     is_approved = serializers.BooleanField(required=False)

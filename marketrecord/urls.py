@@ -19,6 +19,8 @@ urlpatterns = [
     path('location-report-list/', UserLocationReportList.as_view(), name='location-report-list'),
     path('user-report-list/', UserReportList.as_view(), name='user-report-list'),
     path('all-report-list/', AllReportList.as_view(), name='all-report-list'),
+    path('minister-report-list/', MinisterReportList.as_view(), name='minister-report-list'),
+    path('viewers-report-list/', ViewerReportList.as_view(), name='viewers-report-list'),
     path('user-location-market-list/', UserLocationMarketList.as_view(), name='user-location-market-list'),
     
     
