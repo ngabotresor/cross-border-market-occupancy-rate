@@ -5,6 +5,9 @@ from .views import *
 
 urlpatterns = [
 
+    path('component-update/<int:pk>/', ComponentUpdate.as_view(), name='component-update'),
+    path('component-create/', ComponentCreate.as_view(), name='component-create'),
+    path('component-list/', ComponentList.as_view(), name='component-list'),
     path('location-create/', LocationCreate.as_view(), name='location-create'),
     path('location-list/', LocationList.as_view(), name='location-list'),
     path('market-create/', MarketCreate.as_view(), name='market-create'),

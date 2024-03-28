@@ -8,23 +8,50 @@ from rest_framework.permissions import IsAuthenticated
 from authentications.models import *
 from django.shortcuts import get_object_or_404
 
-class LocationCreate(APIView):
-    permission_classes = [permissions.AllowAny] 
+class ComponentUpdate(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
 
-    def post(self, request, format=None):
-        serializer = LocationSerializer(data=request.data)
+    def put(self, request, pk, format=None):
+        market = Component.objects.get(pk=pk)
+        serializer = ComponentSerializer(market, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response({
-                'message': 'Location created successfully',
-                'location': serializer.data
+                "message": "Component updated successfully",
+                "component": serializer.data
+            }, status=status.HTTP_200_OK)
+        return Response({
+            "message": "Failed to update component",
+            "errors": serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+        
+class ComponentCreate(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser] 
+
+    def post(self, request, format=None):
+        serializer = ComponentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'message': 'Component created successfully',
+                'components': serializer.data
             }, status=status.HTTP_201_CREATED)
         return Response({
-            'message': 'Location creation failed',
+            'message': 'Component creation failed',
             'errors': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
         
-    
+# View to all recoreded Component
+class ComponentList(APIView):
+    permission_classes = [permissions.IsAuthenticated] 
+    def get(self, request, format=None):
+        component = Component.objects.all()
+        serializer = ComponentSerializer(component, many=True)
+        return Response({
+            "message": "component retrieved successfully",
+            "components": serializer.data
+        }, status=status.HTTP_200_OK)
+            
 class LocationCreate(APIView):
     permission_classes = [permissions.AllowAny] 
 

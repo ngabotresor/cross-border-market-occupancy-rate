@@ -1,6 +1,17 @@
 from django.db import models
 from authentications.models import User
 
+class Component(models.Model):
+    name = models.CharField(max_length=255)
+    market = models.CharField(max_length=255)
+    total_number_places_available = models.IntegerField()
+
+    class Meta:
+        db_table = 'component'
+
+    def __str__(self):
+        return self.name
+
 class Location(models.Model):
     name = models.CharField(max_length=255)
 
@@ -46,7 +57,7 @@ class Report(models.Model):
 
     class Meta:
         db_table = 'report'
-        # unique_together = ['market', 'season', 'year']
+        unique_together = ['market', 'season', 'year']
 
 class ReportRecord(models.Model):
     report = models.ForeignKey(Report, on_delete=models.CASCADE, related_name='records')
@@ -55,7 +66,7 @@ class ReportRecord(models.Model):
     total_number_places_available = models.IntegerField()
     number_places_rented = models.IntegerField()
     occupancy_rate = models.FloatField(default=0)
-    observation = models.TextField()
+    observation = models.TextField(null=True, blank=True,default='')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -3,6 +3,11 @@ from .models import *
 from authentications.models import *
 from datetime import datetime
 
+class ComponentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Component
+        fields = ['id', 'name', 'market', 'total_number_places_available']
+        
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
@@ -81,9 +86,9 @@ class ReportSerializer(serializers.ModelSerializer):
         current_date = datetime.now()
         year = current_date.year
         month = current_date.month
-        season = 'Winter' if month in [12, 1, 2] else 'Spring' if month in [3, 4, 5] else 'Summer' if month in [6, 7, 8] else 'Autumn'
+        # season = 'Winter' if month in [12, 1, 2] else 'Spring' if month in [3, 4, 5] else 'Summer' if month in [6, 7, 8] else 'Autumn'
 
-        report = Report.objects.create(year=year, season=season, **validated_data)
+        report = Report.objects.create(**validated_data)
         for record_data in records_data:
             ReportRecord.objects.create(report=report, **record_data)
         return report
