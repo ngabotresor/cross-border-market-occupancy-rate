@@ -7,6 +7,11 @@ from authentications.permissions import *
 from rest_framework.permissions import IsAuthenticated
 from authentications.models import *
 from django.shortcuts import get_object_or_404
+from django.conf import settings
+from django.core.mail import send_mail
+from django.db.models import Q, Avg 
+from django.utils import timezone
+from django.db.models.functions import Coalesce
 
 class ComponentUpdate(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
@@ -141,7 +146,7 @@ class MarketDelete(APIView):
 
 # View to all recoreded markets
 class MarketList(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated]
     def get(self, request, format=None):
         markets = Market.objects.all()
         serializer = MarketSerializer(markets, many=True)
@@ -376,10 +381,28 @@ class ReportApproveView(APIView):
                 report.status = 'verified'
                 report.verified_by = request.user
                 report.verified_at = datetime.now()
+                #send email to approver
+                subject = 'A new report has been verified'
+                message = f'Report {report.id} has been verified by {request.user.first_name} {request.user.last_name}.'
+                email_from = settings.EMAIL_HOST_USER
+                users_same_location = User.objects.filter(
+                    location=report.created_by.location,
+                    role__in=[1,3,4,5]
+                )
+                recipient_list = [user.email for user in users_same_location]
+                send_mail(subject, message, email_from, recipient_list)
             elif report.status in ['verified'] and request.user.role.name == Role.approver:
                 report.status = 'approved'
                 report.approved_by = request.user
                 report.approved_at = datetime.now()
+                #send email to users with roles verifier, approver and header
+                subject = 'A new report has been approved'
+                message = f'Report {report.id} has been approved by {request.user.first_name} {request.user.last_name}.'
+                email_from = settings.EMAIL_HOST_USER
+                users_same_location = User.objects.filter(
+                    location=report.created_by.location,
+                    role__in=[1,3,4,5]
+                )
             elif report.status in ['approved'] and request.user.role.name == Role.header:
                 if viewers is None:
                     return Response({'error': 'Viewers are required for header approval'}, status=status.HTTP_400_BAD_REQUEST)
@@ -390,6 +413,22 @@ class ReportApproveView(APIView):
                 report.viewed_by.set(viewers_users)
                 report.forwarded_to = minister_user
                 report.forwarded_at = datetime.now()
+                #send email to verifier, approver, header, and minister
+                subject = 'A new report has been forwarded'
+                message = f'Report {report.id} has been forwarded by {request.user.first_name} {request.user.last_name}.'
+                email_from = settings.EMAIL_HOST_USER
+
+                # Get all users with the same location as the user who created the report and who are verifiers, approvers, or headers
+                # and all users who are ministers, regardless of location
+                users_to_notify = User.objects.filter(
+                Q(location=report.created_by.location, role__in=[1,3,4,5]) |
+                Q(role=6) |
+                Q(id__in=viewers_users)  
+                 )
+                recipient_list = [user.email for user in users_to_notify]
+
+                send_mail(subject, message, email_from, recipient_list)
+
             else:
                 return Response({'error': f'Invalid action for your role {request.user.role.name} or report status {report.status}'}, status=status.HTTP_400_BAD_REQUEST)
             report.save()
@@ -408,6 +447,13 @@ class ReportApproveView(APIView):
                 report.forwarded_at = None
                 report.viewed_by.clear()
                 report.forwarded_to = None
+                #send email to the creator of the report
+                subject = 'A report has been rollbacked'
+                message = f'Report {report.id} has been rollbacked by {request.user.first_name} {request.user.last_name}.'
+                email_from = settings.EMAIL_HOST_USER
+                recipient_list = [report.created_by.email]
+                send_mail(subject, message, email_from, recipient_list)
+
             else:
                 return Response({'error': f'Invalid action for your role {request.user.role.name} or report status {report.status}'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -451,3 +497,123 @@ class ViewReportCommentsView(APIView):
         comments = report.comments.all()
         serializer = CommentListSerializer(comments, many=True)
         return Response(serializer.data)
+    
+    
+
+# view to show the occupancy rate of a report in every market for a selected year
+
+
+# class MarketOccupancyRateView(APIView):
+#     permission_classes = [IsAuthenticated, IsAdminOrMinisterOrViewerUser]
+#     def get(self, request, year=None, format=None):
+#         # If a year is not specified, use the current year
+#         if year is None:
+#             year = timezone.now().year
+
+#         # Get the average occupancy rate for each market for the specified year
+#         markets = Market.objects.annotate(
+#             avg_occupancy_rate=Coalesce(Avg(
+#                 'reports__records__occupancy_rate',
+#                 filter=Q(reports__year=year)
+#             ), 0.0)  # Make 0 a float
+#         )
+
+#         # Prepare data for Response
+#         data = [
+#             {"market": market.name, "average_occupancy_rate": market.avg_occupancy_rate}
+#             for market in markets
+#         ]
+
+#         return Response(data)
+
+# view to show the occupancy rate of a report in every market for a selected year
+class MarketOccupancyRateView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminOrMinisterOrViewerUser]
+    def get(self, request, year=None, format=None):
+        # If a year is not specified, use the current year
+        if year is None:
+            year = timezone.now().year
+
+        # Get the average occupancy rate for each market for the specified year
+        markets = Market.objects.annotate(
+            avg_occupancy_rate=Coalesce(Avg(
+                'reports__records__occupancy_rate',
+                filter=Q(reports__year=year)
+            ), 0.0)  # Make 0 a float
+        )
+
+        # Prepare data for Response
+        data = [
+            {"market": market.name, "average_occupancy_rate": market.avg_occupancy_rate, "year": year}
+            for market in markets
+        ]
+
+        return Response(data)
+
+# class SeasonOccupancyRateView(APIView):
+#     permission_classes = [IsAuthenticated, IsAdminOrMinisterOrViewerUser]
+#     def get(self, request, format=None):
+#         # Get the year and market_id from the query parameters (if they exist)
+#         year = request.query_params.get('year')
+#         market_id = request.query_params.get('market_id')
+
+#         # Start with all reports
+#         reports = Report.objects.all()
+
+#         # If a year is specified, filter by year
+#         if year is not None:
+#             reports = reports.filter(year=year)
+
+#         # If a market is specified, filter by market
+#         if market_id is not None:
+#             reports = reports.filter(market_id=market_id)
+
+#         # List of all seasons
+#         all_seasons = ['Spring', 'Summer', 'Autumn', 'Winter']
+
+#         # Calculate the average occupancy rate for each season
+#         data = []
+#         for season in all_seasons:
+#             avg_occupancy_rate = reports.filter(season=season).aggregate(avg_occupancy_rate=Avg('records__occupancy_rate'))['avg_occupancy_rate']
+#             data.append({
+#                 'season': season,
+#                 'avg_occupancy_rate': avg_occupancy_rate if avg_occupancy_rate is not None else 0
+#             })
+
+#         return Response(data)
+
+
+# Season Occupancy rate
+class SeasonOccupancyRateView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminOrMinisterOrViewerUser]
+    def get(self, request, format=None):
+        # Get the year and market_id from the query parameters (if they exist)
+        year = request.query_params.get('year')
+        market_id = request.query_params.get('market_id')
+
+        # Start with all reports
+        reports = Report.objects.all()
+
+        # If a year is specified, filter by year
+        if year is not None:
+            reports = reports.filter(year=year)
+
+        # If a market is specified, filter by market
+        if market_id is not None:
+            reports = reports.filter(market_id=market_id)
+
+        # List of all seasons
+        all_seasons = ['Spring', 'Summer', 'Autumn', 'Winter']
+
+        # Calculate the average occupancy rate for each season
+        data = []
+        for season in all_seasons:
+            avg_occupancy_rate = reports.filter(season=season).aggregate(avg_occupancy_rate=Avg('records__occupancy_rate'))['avg_occupancy_rate']
+            data.append({
+                'season': season,
+                'avg_occupancy_rate': avg_occupancy_rate if avg_occupancy_rate is not None else 0,
+                'year': year,
+                'market': Market.objects.get(id=market_id).name if market_id else 'All markets'
+            })
+
+        return Response(data)

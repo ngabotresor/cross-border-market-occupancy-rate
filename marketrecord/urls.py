@@ -1,5 +1,5 @@
 # urls.py
-from django.urls import path
+from django.urls import path, re_path
 from .views import *
 
 
@@ -25,6 +25,8 @@ urlpatterns = [
     path('minister-report-list/', MinisterReportList.as_view(), name='minister-report-list'),
     path('viewers-report-list/', ViewerReportList.as_view(), name='viewers-report-list'),
     path('user-location-market-list/', UserLocationMarketList.as_view(), name='user-location-market-list'),
+    re_path(r'^market_occupancy_rate/(?:(?P<year>\d+)/)?$', MarketOccupancyRateView.as_view(), name='market_occupancy_rate'),
+    path('season_occupancy_rate/', SeasonOccupancyRateView.as_view(), name='season_occupancy_rate'),
     
     
 ]

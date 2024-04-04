@@ -80,4 +80,18 @@ class IsMinisterUser(permissions.BasePermission):
             self.message = 'Only a minister can perform this task.'
         return is_minister
     
+    
+class IsAdminOrMinisterOrViewerUser(permissions.BasePermission):
+    """
+    Custom permission to only allow admin, minister or viewer users to access a view.
+    """
+    message = "Only admin, minister or viewer users can access this endpoint."
+    def has_permission(self, request, view):
+        is_admin = bool(request.user and request.user.role.name == 'admin')
+        is_minister = bool(request.user and request.user.role.name == 'minister')
+        is_viewer = bool(request.user and request.user.role.name == 'viewer')
+        if not is_admin and not is_minister and not is_viewer:
+            self.message = 'Only an admin, minister or viewer can perform this task.'
+        return is_admin or is_minister or is_viewer
+    
 

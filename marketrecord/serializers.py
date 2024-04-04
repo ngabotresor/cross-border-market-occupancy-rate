@@ -2,6 +2,9 @@ from rest_framework import serializers
 from .models import *
 from authentications.models import *
 from datetime import datetime
+from django.conf import settings
+from django.core.mail import send_mail
+
 
 class ComponentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -91,6 +94,16 @@ class ReportSerializer(serializers.ModelSerializer):
         report = Report.objects.create(**validated_data)
         for record_data in records_data:
             ReportRecord.objects.create(report=report, **record_data)
+        # Send email after report is created
+        subject = 'A new report has been created'
+        message = f'Report with id:{report.id} and occupancy rate of {record_data["occupancy_rate"]} has been created by {user.firstname} {user.lastname} at {report.created_at}.'
+        email_from = settings.EMAIL_HOST_USER  
+        users_same_location = User.objects.filter(
+            location=report.created_by.location,
+             role__in=[1,3,4,5]
+            )
+        recipient_list = [user.email for user in users_same_location]
+        send_mail(subject, message, email_from,recipient_list)
         return report
     
     
