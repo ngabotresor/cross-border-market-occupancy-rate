@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
+import os
 from pathlib import Path
 from decouple import config
 from datetime import timedelta
@@ -26,7 +26,7 @@ SECRET_KEY =  config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["10.110.23.60", "localhost"]
+ALLOWED_HOSTS = ["127.0.0.1", "10.10.103.118", "localhost"]
 
 
 
@@ -84,11 +84,11 @@ WSGI_APPLICATION = 'cross_border_market_system.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'cross_border_market_db',
+        'USER': 'postgres',
+        'PASSWORD': 'Rumiya@19920',
+        'HOST': 'db',
         'PORT': config('DB_PORT'),
     }
 }
@@ -164,20 +164,29 @@ AUTH_USER_MODEL = 'authentications.User'
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
-
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-    'http://10.110.23.58:3000',
-    'http://10.110.23.60:3000',
+    'http://localhost',
+    'http://127.0.0.1',
+    'http://10.10.103.118',
+    'https://10.10.103.118',
+    'http://10.10.103.118:8000',
+    'http://0.0.0.0',
 ]
 
 CORS_ORIGIN_WHITELIST = (
-    'http://localhost:3000',
+    'http://localhost',
+    'http://127.0.0.1',
+    'http://10.10.103.118',
+    'https://10.10.103.118',
+    'http://10.10.103.118:8000',
+    'http://0.0.0.0',
+    'https://0.0.0.0',
     'http://10.110.23.58:3000',
     'http://10.110.23.60:3000',
 )

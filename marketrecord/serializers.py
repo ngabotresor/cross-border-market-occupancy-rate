@@ -96,7 +96,7 @@ class ReportSerializer(serializers.ModelSerializer):
             ReportRecord.objects.create(report=report, **record_data)
         # Send email after report is created
         subject = 'A new report has been created'
-        message = f'Report with id:{report.id} and occupancy rate of {record_data["occupancy_rate"]} has been created by {user.firstname} {user.lastname} at {report.created_at}.'
+        message = f'Report with id:{report.id} has been created by {user.firstname} {user.lastname} at {report.created_at}.'
         email_from = settings.EMAIL_HOST_USER  
         users_same_location = User.objects.filter(
             location=report.created_by.location,

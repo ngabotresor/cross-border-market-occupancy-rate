@@ -1,13 +1,17 @@
-FROM python:3.8-slim
+FROM python:3.11
+
+COPY ./requirements.txt .
 
 RUN pip install --upgrade pip
 
-COPY ./requirements.txt .
 RUN pip install -r requirements.txt
 
 COPY . /app
+
 WORKDIR /app
 
-COPY ./entrypoint.sh .
+COPY ./entrypoint.sh /app/entrypoint.sh
 
-ENTRYPOINT [ "sh", '/app/entrypoint.sh' ]
+RUN chmod +x /app/entrypoint.sh
+
+ENTRYPOINT ["/app/entrypoint.sh" ]

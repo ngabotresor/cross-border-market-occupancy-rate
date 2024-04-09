@@ -1,0 +1,26 @@
+version: '3.9'
+
+services:
+  backend:
+    image: tngabo/cbm-backend
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - static:/static
+      - static_volume:/app/staticfiles
+      - .:/app
+    depends_on:
+      - db
+
+  db:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: cross_border_market_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Rumiya@19920
+
+volumes:
+  static:
+  static_volume:
