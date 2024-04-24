@@ -109,7 +109,7 @@ class MarketCreate(APIView):
                 "message": "Market created successfully",
                 "market": serializer.data
             }, status=status.HTTP_201_CREATED)
-        return Response({
+        return Response({  
             "message": "Failed to create market",
             "errors": serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
@@ -383,7 +383,7 @@ class ReportApproveView(APIView):
                 report.verified_at = datetime.now()
                 #send email to approver
                 subject = 'A new report has been verified'
-                message = f'Report {report.id} has been verified by {request.user.first_name} {request.user.last_name}.'
+                message = f'Report {report.id} has been verified by {request.user.firstname} {request.user.lastname}.'
                 email_from = settings.EMAIL_HOST_USER
                 users_same_location = User.objects.filter(
                     location=report.created_by.location,
@@ -397,7 +397,7 @@ class ReportApproveView(APIView):
                 report.approved_at = datetime.now()
                 #send email to users with roles verifier, approver and header
                 subject = 'A new report has been approved'
-                message = f'Report {report.id} has been approved by {request.user.first_name} {request.user.last_name}.'
+                message = f'Report {report.id} has been approved by {request.user.firstname} {request.user.lastname}.'
                 email_from = settings.EMAIL_HOST_USER
                 users_same_location = User.objects.filter(
                     location=report.created_by.location,
@@ -415,7 +415,7 @@ class ReportApproveView(APIView):
                 report.forwarded_at = datetime.now()
                 #send email to verifier, approver, header, and minister
                 subject = 'A new report has been forwarded'
-                message = f'Report {report.id} has been forwarded by {request.user.first_name} {request.user.last_name}.'
+                message = f'Report {report.id} has been forwarded by {request.user.firstname} {request.user.lastname}.'
                 email_from = settings.EMAIL_HOST_USER
 
                 # Get all users with the same location as the user who created the report and who are verifiers, approvers, or headers
@@ -437,7 +437,7 @@ class ReportApproveView(APIView):
             if comment_text is None:
                 return Response({'error': 'Comment is required for rollback action'}, status=status.HTTP_400_BAD_REQUEST)
             Comment.objects.create(commented_by=request.user, report=report, comment=comment_text)
-            if report.status in ['pending','verified', 'approved']:
+            if report.status in ['pending','verified', 'approved', 'rollback_to_be_signed']:
                 report.status = 'rollback'
                 report.verified_by = None
                 report.verified_at = None
@@ -449,7 +449,7 @@ class ReportApproveView(APIView):
                 report.forwarded_to = None
                 #send email to the creator of the report
                 subject = 'A report has been rollbacked'
-                message = f'Report {report.id} has been rollbacked by {request.user.first_name} {request.user.last_name}.'
+                message = f'Report {report.id} has been rollbacked by {request.user.firstname} {request.user.lastname}.'
                 email_from = settings.EMAIL_HOST_USER
                 recipient_list = [report.created_by.email]
                 send_mail(subject, message, email_from, recipient_list)

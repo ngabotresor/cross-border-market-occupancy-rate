@@ -32,7 +32,7 @@ class MarketSerializer(serializers.ModelSerializer):
 class ReportRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReportRecord
-        fields = ['component_name','total_number_places_available', 'number_places_rented','occupancy_rate', 'observation']
+        fields = ['id','component_name','total_number_places_available', 'number_places_rented','occupancy_rate', 'observation']
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -62,19 +62,6 @@ class ReportSerializer(serializers.ModelSerializer):
             'created_by': {'read_only': True},
             'id':{'read_only':True}
         }
-
-    # def create(self, validated_data):
-    #     records_data = validated_data.pop('records')
-    #     market = validated_data.get('market')
-    #     user = self.context['request'].user
-
-    #     if market.location != user.location:
-    #         raise serializers.ValidationError("You can only create a report for a market in your location.")
-
-    #     report = Report.objects.create(**validated_data)
-    #     for record_data in records_data:
-    #         ReportRecord.objects.create(report=report, **record_data)
-    #     return report
         
     
     def create(self, validated_data):
@@ -93,6 +80,10 @@ class ReportSerializer(serializers.ModelSerializer):
 
         report = Report.objects.create(**validated_data)
         for record_data in records_data:
+            
+            if record_data['total_number_places_available'] < record_data['number_places_rented']:
+                raise serializers.ValidationError("The number of places rented cannot be greater than the total number of places available.")
+            
             ReportRecord.objects.create(report=report, **record_data)
         # Send email after report is created
         subject = 'A new report has been created'
@@ -113,24 +104,32 @@ class ReportSerializer(serializers.ModelSerializer):
     
     
     def update(self, instance, validated_data):
-        records_data = validated_data.pop('records')
-        instance = super().update(instance, validated_data)
-
-        # Handle the records
+        records_data = validated_data.pop('records', []) 
+        existing_records = {record.id: record for record in instance.records.all()}
+        updated_records = []
         for record_data in records_data:
-            record_id = record_data.get('id', None)
+            record_id = record_data.get('id')
             if record_id:
-                # Update the record if it already exists
-                record = ReportRecord.objects.get(id=record_id, report=instance)
-                for attr, value in record_data.items():
-                    setattr(record, attr, value)
-                record.save()
+                # Update existing ReportRecord instance
+                record_instance = existing_records.pop(record_id, None)
+                if record_instance:
+                    record_serializer = ReportRecordSerializer(instance=record_instance, data=record_data)
+                else:
+                    continue  # Skip if record with provided ID doesn't exist
             else:
-                # Create a new record
-                ReportRecord.objects.create(report=instance, **record_data)
+                # Create new ReportRecord instance
+                record_serializer = ReportRecordSerializer(data=record_data)
+
+            if record_serializer.is_valid():
+                updated_record = record_serializer.save(report=instance)  # Assign report to the record
+                updated_records.append(updated_record)
+
+        # Delete remaining ReportRecord instances that were not updated
+        for record in existing_records.values():
+            record.delete()
 
         return instance
-    
+
 
 
 

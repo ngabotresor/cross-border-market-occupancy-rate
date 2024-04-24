@@ -23,10 +23,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY =  config('SECRET_KEY')
 
+
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1", "10.10.103.118", "localhost"]
+ALLOWED_HOSTS = ["127.0.0.1", "10.10.103.118", "localhost", "cbmoccupancy.minicom.gov.rw", "197.243.16.54"]
 
 
 
@@ -85,10 +87,10 @@ WSGI_APPLICATION = 'cross_border_market_system.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'cross_border_market_db',
-        'USER': 'postgres',
-        'PASSWORD': 'Rumiya@19920',
-        'HOST': 'db',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': ('10.10.103.118'),
         'PORT': config('DB_PORT'),
     }
 }
@@ -172,15 +174,19 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost',
+    'http://localhost:3000',
     'http://127.0.0.1',
     'http://10.10.103.118',
     'https://10.10.103.118',
     'http://10.10.103.118:8000',
     'http://0.0.0.0',
+    "http://cbmoccupancy.minicom.gov.rw", "http://197.243.16.54",
+    'https://cbmoccupancy.minicom.gov.rw',
 ]
 
 CORS_ORIGIN_WHITELIST = (
     'http://localhost',
+    'http://localhost:3000',
     'http://127.0.0.1',
     'http://10.10.103.118',
     'https://10.10.103.118',
@@ -189,4 +195,26 @@ CORS_ORIGIN_WHITELIST = (
     'https://0.0.0.0',
     'http://10.110.23.58:3000',
     'http://10.110.23.60:3000',
+    "http://cbmoccupancy.minicom.gov.rw", "http://197.243.16.54",
+    'https://cbmoccupancy.minicom.gov.rw',
 )
+
+CORS_ALLOW_METHODS = [
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'OPTIONS',
+]
+
+# Optionally specify allowed headers
+CORS_ALLOW_HEADERS = [
+    'Accept',
+    'Content-Type',
+    'Authorization',
+    # Add more allowed headers as needed
+]
+
+ssl_certificate = '/etc/ssl/cbm/cbm.pem';
+ssl_certificate_key = '/etc/ssl/cbm/cbm.key';

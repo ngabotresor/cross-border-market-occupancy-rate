@@ -1,14 +1,15 @@
 #!/bin/bash
 
-# Apply Django database migrations
-echo "Applying database migrations..."
+# Apply migrations
 python manage.py makemigrations
 python manage.py migrate --no-input
 
 # Collect static files
-echo "Collecting static files..."
 python manage.py collectstatic --no-input
 
-# Start Django development server
-echo "Starting Django development server..."
-python manage.py runserver 0.0.0.0:8000
+# Start Gunicorn server with SSL/TLS
+echo "Starting Gunicorn server..."
+gunicorn cross_border_market_system.wsgi:application \
+    --bind 0.0.0.0:8000 \
+    --certfile=/etc/ssl/cbm/cbm.pem \
+    --keyfile=/etc/ssl/cbm/cbm.key
